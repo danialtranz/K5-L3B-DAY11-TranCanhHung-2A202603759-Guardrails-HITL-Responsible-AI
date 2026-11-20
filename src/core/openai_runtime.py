@@ -41,7 +41,7 @@ class OpenAIRunner:
     model: str
     plugins: list = field(default_factory=list)
     provider: str = "openai"
-    temperature: float = 0.4
+    temperature: float | None = 0.4
     client_kwargs: dict = field(default_factory=dict)
     input_hooks: list[Callable[[str], str | None]] = field(default_factory=list)
     output_hooks: list[Callable[[str], str]] = field(default_factory=list)
@@ -62,14 +62,17 @@ class OpenAIRunner:
             return block_msg
 
         client = self._client()
-        completion = client.chat.completions.create(
-            model=self.model,
-            messages=[
+        create_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
                 {"role": "system", "content": agent.instruction},
                 {"role": "user", "content": user_message},
             ],
-            temperature=self.temperature,
-        )
+        }
+        # Some models (e.g. gpt-5.6-luna) only allow the default temperature.
+        if self.temperature is not None:
+            create_kwargs["temperature"] = self.temperature
+        completion = client.chat.completions.create(**create_kwargs)
         text = (completion.choices[0].message.content or "").strip()
 
         for hook in self.output_hooks:
@@ -165,7 +168,7 @@ def _make_pair(
     plugins: list | None = None,
     input_hooks: list | None = None,
     output_hooks: list | None = None,
-    temperature: float = 0.4,
+    temperature: float | None = 0.4,
 ) -> tuple[OpenAIAgent, OpenAIRunner]:
     agent = OpenAIAgent(name=name, instruction=instruction, provider=provider)
     runner = OpenAIRunner(
@@ -189,7 +192,7 @@ def create_blue_pair(
     plugins: list | None = None,
     input_hooks: list | None = None,
     output_hooks: list | None = None,
-    temperature: float = 0.4,
+    temperature: float | None = 0.4,
 ) -> tuple[OpenAIAgent, OpenAIRunner]:
     """Blue Team — always OpenRouter liquid/lfm-3-1.7b:free."""
     return _make_pair(
@@ -214,7 +217,7 @@ def create_openai_pair(
     plugins: list | None = None,
     input_hooks: list | None = None,
     output_hooks: list | None = None,
-    temperature: float = 0.4,
+    temperature: float | None = 0.4,
     model: str | None = None,
 ) -> tuple[OpenAIAgent, OpenAIRunner]:
     """Red Team OpenAI path (default = soft model; advance may pass harder)."""

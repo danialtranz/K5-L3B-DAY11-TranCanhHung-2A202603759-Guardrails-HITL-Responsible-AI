@@ -1,8 +1,27 @@
 # Day 11 — Controlled Agent Security (2026)
 
+| | |
+|---|---|
+| **Họ tên** | Tran Canh Hung |
+| **MSSV** | 2A202603759 |
+| **Lớp** | K5-L3B |
+| **Repo** | `K5-L3B-DAY11-TranCanhHung-2A202603759-Guardrails-HITL-Responsible-AI` |
+
 > 👤 **Hình thức:** bài tập **cá nhân** (1 người / 1 MSSV).  
 > 🎯 **Mục tiêu:** đóng vai **Blue Team** để học cách xây Guardrails phòng thủ, rồi đóng vai **Red Team** để tấn công agent **Red** hoặc **Red Advance**.  
 > ✅ Làm theo **Checkpoint 1 → 5** trong [`CHECKPOINTS.md`](CHECKPOINTS.md) · nộp theo [`SUBMISSION.md`](SUBMISSION.md).
+
+### Cách chạy nhanh
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+# Điền .env từ .env.example (OPENROUTER_API_KEY + OPENAI_API_KEY hoặc GOOGLE_API_KEY)
+python src/main.py --part 3   # Blue → outputs/results.json
+python src/main.py --part 4   # Red → outputs/attack_results.json
+pytest tests/smoke tests/public -q
+python scripts/grade.py --submission-dir . --out outputs/grade_report.json
+```
 
 ---
 

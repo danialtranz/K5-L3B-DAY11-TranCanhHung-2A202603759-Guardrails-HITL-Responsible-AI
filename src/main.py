@@ -33,11 +33,12 @@ async def part2_guardrails():
     print("CHECKPOINT 2: Guardrails")
     print("=" * 60)
 
-    print("\n--- Input Guardrails ---")
+    print("\n--- Input Guardrails (regex L1) ---")
     from guardrails.input_guardrails import (
         test_injection_detection,
         test_topic_filter,
         test_input_plugin,
+        demo_regex_vs_nemo,
     )
     test_injection_detection()
     print()
@@ -45,10 +46,13 @@ async def part2_guardrails():
     print()
     await test_input_plugin()
 
+    print("\n--- Input Guardrails: Regex vs NeMo (L2) ---")
+    await demo_regex_vs_nemo()
+
     print("\n--- Output Guardrails ---")
     from guardrails.output_guardrails import test_content_filter
     test_content_filter()
-    print("(LLM-as-Judge / NeMo — optional, skipped)")
+    print("(LLM-as-Judge — optional, skipped)")
 
 
 async def part3_assignment_suite():
@@ -64,7 +68,7 @@ async def part3_assignment_suite():
     )
 
     try:
-        plugins = build_production_plugins(use_llm_judge=False)
+        plugins = build_production_plugins(use_llm_judge=True, use_nemo=True)
         audit, monitor = build_observability()
         pipeline = {"plugins": plugins, "audit": audit, "monitor": monitor}
         result = await run_assignment_suite(pipeline)
@@ -133,6 +137,39 @@ async def part4_attacks():
     }
 
 
+async def chat_blue():
+    """Interactive Blue demo: paste classmate prompts, see guarded replies."""
+    from agents.agent import create_blue_agent
+    from assignment.pipeline import build_production_plugins
+    from core.utils import chat_with_agent
+
+    print("\n" + "=" * 60)
+    print("BLUE DEMO CHAT (guardrails + Luna judge)")
+    print("Dán prompt → Enter. Gõ quit / exit / q để thoát.")
+    print("=" * 60)
+
+    plugins = build_production_plugins(use_llm_judge=True, use_nemo=True)
+    agent, runner = create_blue_agent(plugins)
+    print("Sẵn sàng. Bạn có thể chat ngay.\n")
+
+    while True:
+        try:
+            user_text = input("You> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nBye.")
+            break
+        if not user_text:
+            continue
+        if user_text.lower() in {"quit", "exit", "q"}:
+            print("Bye.")
+            break
+        try:
+            reply, _ = await chat_with_agent(agent, runner, user_text)
+            print(f"Blue> {reply or '(empty)'}\n")
+        except Exception as exc:
+            print(f"[error] {type(exc).__name__}: {exc}\n")
+
+
 async def main(parts=None):
     setup_api_key()
 
@@ -158,7 +195,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(
             "Lab 11: Guardrails / HITL / Red Team — "
-            "--part khớp Checkpoint (2, 3, 4)"
+            "--part khớp Checkpoint (2, 3, 4) · --chat demo Blue"
         )
     )
     parser.add_argument(
@@ -167,9 +204,17 @@ if __name__ == "__main__":
         choices=[2, 3, 4],
         help="2=CP2 guardrails · 3=CP3 suite · 4=CP4 red-team",
     )
+    parser.add_argument(
+        "--chat",
+        action="store_true",
+        help="Interactive Blue chat (demo: paste attack prompts)",
+    )
     args = parser.parse_args()
 
-    if args.part:
+    if args.chat:
+        setup_api_key()
+        asyncio.run(chat_blue())
+    elif args.part:
         asyncio.run(main(parts=[args.part]))
     else:
         asyncio.run(main())
