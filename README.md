@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Họ tên** | Tran Canh Hung |
+| **Họ tên** | Trần Cảnh Hưng |
 | **MSSV** | 2A202603759 |
 | **Lớp** | K5-L3B |
 | **Repo** | `K5-L3B-DAY11-TranCanhHung-2A202603759-Guardrails-HITL-Responsible-AI` |
